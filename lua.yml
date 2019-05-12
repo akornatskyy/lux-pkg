@@ -1,0 +1,61 @@
+maintainer: Andriy Kornatskyy <andriy.kornatskyy@live.com>
+default: 5.1
+timeout: 10s
+bundles:
+  5.1:
+    env:
+    - VERSION=5.1.5
+    - CHECKSUM=b3882111ad02ecc6b972f8c1241647905cb2e3fc
+    - PLATFORM=linux
+    run:
+    - rm
+    - download
+    - checksum
+    - install
+  5.2:
+    env:
+    - VERSION=5.2.4
+    - CHECKSUM=ef15259421197e3d85b7d6e4871b8c26fd82c1cf
+    - PLATFORM=linux
+    run:
+    - rm
+    - download
+    - checksum
+    - install
+  5.3:
+    env:
+    - VERSION=5.3.5
+    - CHECKSUM=112eb10ff04d1b4c9898e121d6bdf54a81482447
+    - PLATFORM=linux
+    run:
+    - rm
+    - download
+    - checksum
+    - install
+scripts:
+  download: |-
+    set -ex \
+      && if [ ! -f "${CACHE}/lua-v${VERSION}.tar.gz" ] ; then \
+           wget -v -c https://www.lua.org/ftp/lua-${VERSION}.tar.gz \
+             -O /tmp/lua-v${VERSION}.tar.gz \
+           && mv /tmp/lua-v${VERSION}.tar.gz ${CACHE} ; \
+         fi
+  checksum: |-
+    set -ex \
+      && cd ${CACHE} \
+      && echo "${CHECKSUM} *lua-v${VERSION}.tar.gz" | sha1sum -c --quiet -
+  install: |-
+    set -ex \
+      && mkdir -p ${ENV}/lua \
+      && cd ${ENV}/lua \
+      \
+      && tar -zxf ${CACHE}/lua-v${VERSION}.tar.gz --strip-components=1 \
+      \
+      && sed -i.bak s%/usr/local%${ENV}%g src/luaconf.h \
+      && sed -i.bak s%./?.lua\;%./?.lua\;./src/?.lua\;%g src/luaconf.h \
+      \
+      && make -j"$(nproc)" ${PLATFORM} INSTALL_TOP=${ENV} \
+      && make install INSTALL_TOP=${ENV} \
+      \
+      && cd .. \
+      && rm -rf lua

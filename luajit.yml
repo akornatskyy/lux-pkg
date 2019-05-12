@@ -1,0 +1,65 @@
+maintainer: Andriy Kornatskyy <andriy.kornatskyy@live.com>
+default: 2.1
+timeout: 1m
+bundles:
+  2.0:
+    env:
+    - VERSION=2.0.5
+    - CHECKSUM=b670d4454cfb33d98959e94b0d5d713f14a7e3c9
+    run:
+    - rm
+    - download
+    - checksum
+    - install
+  2.1.0-beta2:
+    env:
+    - VERSION=2.1.0-beta2
+    - CHECKSUM=2445eefa096abc1a862c330ff6fb273f917809ef
+    run:
+    - rm
+    - download
+    - checksum
+    - install
+  2.1.0-beta3:
+    env:
+    - VERSION=2.1.0-beta3
+    - CHECKSUM=67ca4031e7ae26598d8b93a0b4ee2b675e0341ee
+    run:
+    - rm
+    - download
+    - checksum
+    - install
+  2.1:
+    env:
+    - VERSION=2.1
+    run:
+    - rm
+    - download
+    - install
+scripts:
+  download: |-
+    set -ex \
+      && if [ ! -f "${CACHE}/luajit-v${VERSION}.tar.gz" ] ; then \
+           wget -v -c https://github.com/LuaJIT/LuaJIT/archive/v${VERSION}.tar.gz \
+              -O /tmp/luajit-v${VERSION}.tar.gz \
+           && mv /tmp/luajit-v${VERSION}.tar.gz ${CACHE} ;\
+         fi
+  checksum: |-
+    set -ex \
+      && cd ${CACHE} \
+      && echo "${CHECKSUM} *luajit-v${VERSION}.tar.gz" | sha1sum -c --quiet -
+  install: |-
+    set -ex \
+      && mkdir -p ${ENV}/luajit \
+      && cd ${ENV}/luajit \
+      \
+      && tar -zxf ${CACHE}/luajit-v${VERSION}.tar.gz --strip-components=1 \
+      \
+      && sed -i.bak s%/usr/local%${ENV}%g src/luaconf.h \
+      && sed -i.bak s%./?.lua\"%./?.lua\;./src/?.lua\"%g src/luaconf.h \
+      \
+      && make -j"$(nproc)" install PREFIX=${ENV} INSTALL_INC=${ENV}/include \
+      \
+      && ln -sf ${ENV}/bin/luajit-* ${ENV}/bin/lua \
+      && cd .. \
+      && rm -rf luajit

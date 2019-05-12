@@ -1,0 +1,54 @@
+maintainer: Andriy Kornatskyy <andriy.kornatskyy@live.com>
+default: 3.1
+timeout: 10s
+bundles:
+  3.1:
+    env:
+    - VERSION=3.1.2
+    - CHECKSUM=73aab292f7d7c0f25e006ed90e7c9e980a5dcd51
+    run:
+    - download
+    - checksum
+    - install
+  3.0:
+    env:
+    - VERSION=3.0.4
+    - CHECKSUM=86a270938d6aafd1af65b57a1cc527bb2745b8a6
+    run:
+    - download
+    - checksum
+    - install
+  2.4:
+    env:
+    - VERSION=2.4.4
+    - CHECKSUM=cb7f93e80d704b5f7ed93406ec6c950a2c969600
+    run:
+    - download
+    - checksum
+    - install
+scripts:
+  download: |-
+    set -ex \
+      && if [ ! -f "${CACHE}/luarocks-v${VERSION}.tar.gz" ] ; then \
+           wget -v -c https://luarocks.org/releases/luarocks-${VERSION}.tar.gz \
+             -O /tmp/luarocks-v${VERSION}.tar.gz \
+           && mv /tmp/luarocks-v${VERSION}.tar.gz ${CACHE} ; \
+         fi
+  checksum:
+    set -ex \
+      && cd ${CACHE} \
+      && echo "${CHECKSUM} *luarocks-v${VERSION}.tar.gz" | sha1sum -c --quiet -
+  install: |-
+    set -ex \
+      && mkdir -p ${ENV}/luarocks \
+      && cd ${ENV}/luarocks \
+      \
+      && tar -zxf ${CACHE}/luarocks-v${VERSION}.tar.gz --strip-components=1 \
+      \
+      && ./configure --prefix=${ENV} --with-lua=${ENV} --force-config > /dev/null \
+      \
+      && make -j"$(nproc)" build \
+      && make install \
+      \
+      && cd .. \
+      && rm -rf luarocks
