@@ -24,8 +24,18 @@ bundles:
     - install
   5.3:
     env:
-    - VERSION=5.3.5
-    - CHECKSUM=112eb10ff04d1b4c9898e121d6bdf54a81482447
+    - VERSION=5.3.6
+    - CHECKSUM=f27d20d6c81292149bc4308525a9d6733c224fa5
+    - PLATFORM=linux
+    run:
+    - rm
+    - download
+    - checksum
+    - install
+  5.4:
+    env:
+    - VERSION=5.4.1
+    - CHECKSUM=88961e7d4fda58ca2c6163938fd48db8880e803d
     - PLATFORM=linux
     run:
     - rm
